@@ -46,6 +46,13 @@ resource "aws_security_group" "myapp-sg" {
   }
 
   ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
@@ -95,14 +102,14 @@ resource "aws_route_table_association" "a-rtb-subnet" {
 }
 
 resource "aws_key_pair" "ssh-key" {
-  key_name   = "server"
+  key_name   = "server.pem"
   public_key = file(var.ssh_key)
 }
 
 resource "aws_instance" "myapp-server-one" {
   ami                         = data.aws_ami.amazon-linux-image.id
   instance_type               = var.instance_type
-  key_name                    = "server"
+  key_name                    = "server.pem"
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.myapp-subnet-1.id
   vpc_security_group_ids      = [aws_security_group.myapp-sg.id]
@@ -125,7 +132,7 @@ resource "aws_instance" "myapp-server-one" {
 resource "aws_instance" "myapp-server-two" {
   ami                         = data.aws_ami.amazon-linux-image.id
   instance_type               = var.instance_type
-  key_name                    = "server"
+  key_name                    = "server.pem"
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.myapp-subnet-1.id
   vpc_security_group_ids      = [aws_security_group.myapp-sg.id]

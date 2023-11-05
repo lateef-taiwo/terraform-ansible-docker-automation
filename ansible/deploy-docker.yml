@@ -1,0 +1,50 @@
+---
+  - name: Install Python3 and Docker
+    hosts: docker_server
+    become: yes
+    tasks:
+      - name: Install python3     #note: yum module is not compatible with python3 you may need to use python2
+        vars: 
+          ansible_python_interpreter: /usr/bin/python #use python2 interpreter
+        yum: 
+          name:
+            - python3
+            - docker
+          update_cache: yes
+          state: present
+
+  - name: Install Docker-Compose
+    hosts: docker_server
+    become: yes
+    tasks: 
+      - name: Install Docker-Compose
+        get_url:
+          url: https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-darwin-x86_64 #https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linu{{lookup('pipe', 'uname -m')}}  #lookup is jinja2 template which ansible use. pipe is ansible lookup plugin
+          dest: /usr/local/bin/docker-compose
+          mode: +x   #Add permission mode execute(x)
+
+  - name: Start Docker Daemon
+    hosts: docker_server
+    become: yes
+    tasks:
+      - name: Start docker Daemon
+        ansible.builtin.systemd:
+          name: docker
+          state: started
+
+  - name: Add ec2-user to docker group
+    hosts: docker_server
+    become: yes
+    tasks: 
+      - name: Add ec2-user to docker group
+        user: #use the user module
+          name: ec2-user
+          groups: docker
+          append: yes # add ec2-user to the docker group
+
+  - name: Test if you can pull an image
+    hosts: docker_server
+    tasks:
+      - name: Pull redis image and nginx image
+        #command: docker pull redis
+        shell: docker pull nginx && docker pull redis #use shell module to pull more than one image
